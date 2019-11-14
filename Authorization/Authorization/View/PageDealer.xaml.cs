@@ -10,9 +10,9 @@ using Xamarin.Forms.Xaml;
 namespace Authorization.View
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
-    public partial class UserPage : ContentPage
+    public partial class PageDealer : ContentPage
     {
-        public UserPage()
+        public PageDealer()
         {
             InitializeComponent();
         }

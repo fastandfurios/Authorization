@@ -10,11 +10,14 @@
             <StackLayout VerticalOptions="CenterAndExpand"
                          Spacing="30">
                 <Entry Placeholder="Введите логин"
-                       CursorPosition="0"></Entry>
+                       CursorPosition="0"
+                       Text="{Binding Login}"></Entry>
                 <Entry Placeholder="Введите пароль"
                        CursorPosition="0"
-                       IsPassword="True"></Entry>
-                <Button Text="Вход" Command="{Binding Input}"></Button>
+                       IsPassword="True"
+                       Text="{Binding Password}"></Entry>
+                <Button Text="Вход"
+                        Command="{Binding Input}"></Button>
             </StackLayout>
         </Frame>
     </ContentPage.Content>

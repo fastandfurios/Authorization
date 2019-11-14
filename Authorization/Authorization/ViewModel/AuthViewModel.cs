@@ -5,6 +5,7 @@ using Authorization.View;
 using Realms;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Authentication;
 using System.Text;
@@ -15,66 +16,109 @@ using Xamarin.Forms;
 
 namespace Authorization.ViewModel
 {
-    class AuthViewModel
+    class AuthViewModel : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        //private readonly Realm _realm = Realm.GetInstance();
         private string _login;
         private string _password;
         private bool _authNotSuccess;
-        //private readonly Realm _realm = Realm.GetInstance();
         private AuthService _authService = new AuthService();
+
         public AuthViewModel()
         {
+            Input = new Command(obj =>
+                                        { 
+                                            LoginCommandExecute(Login, Password); 
+                                        },
+                                        obj => Connectivity.NetworkAccess == NetworkAccess.Internet && Login != string.Empty && Password != string.Empty);
+
             var user = new User();
+            user.Login = _login;
+            user.Password = _password;
 
-            _login = user.Login;
-            _password = user.Password;
-
-            Input = new CommutatorCommand(obj =>
-                                          {
-                                              //_realm.Write(() =>
-                                              //{
-                                              //    user.Login = Login;
-                                              //    user.Password = Password;
-                                              //});
-                                              LoginCommandExecute(user);
-                                          },
-                                          obj => Connectivity.NetworkAccess == NetworkAccess.Internet && Login != string.Empty && Password != string.Empty);
+            AuthNotSuccess = false;
         }
 
+        /// <summary>
+        /// Отображает введеный логин пользователя
+        /// </summary>
         public string Login 
         {
+            set
+            {
+                if (_login != value)
+                {
+                    _login = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Login"));
+                }
+            }
             get => _login;
-            set => _login = value;
         }
 
+        /// <summary>
+        /// Отображает введеный пароль пользователя
+        /// </summary>
         public string Password 
         {
+            set
+            {
+                if (_password != value)
+                {
+                    _password = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Password"));
+                }
+            }
             get => _password;
-            set => _password = value; 
         }
 
+        public bool AuthNotSuccess 
+        {
+            set => _authNotSuccess = value;
+            get => _authNotSuccess;
+        }
+
+        /// <summary>
+        /// Выполняет команду при нажатии кнопки
+        /// </summary>
         public ICommand Input 
         { 
-            get; 
-            set; 
+            get;
         }
 
-        private async void LoginCommandExecute(User user)
+        /// <summary>
+        /// При нажатии кнопки запускает метод отправки данных на сервер. Выдает алерт
+        /// </summary>
+        /// <param name="login">Логин пользователя</param>
+        /// <param name="password">Пароль пользователя</param>
+        private async void LoginCommandExecute(string login, string password)
         {
-            
-            bool result = await _authService.LoginAsync(user);
-
-            if (result)
+            try
             {
-                await Application.Current.MainPage.DisplayAlert("Уведомление","Вход выполнен","ОК");
+                var app = Application.Current as App;
+                if (app == null)
+                {
+                    return;
+                }
+
+                bool result = await _authService.LoginAsync(login, password);
+
+                if (result)
+                {
+                    await Application.Current.MainPage.DisplayAlert("Уведомление", "Вход выполнен!", "ОК");
+                }
+                else
+                {
+                    await Application.Current.MainPage.DisplayAlert("Уведомление", "Неверный логин или пароль!", "ОК");
+                }
             }
-
-            var app = Application.Current as App;
-            if(app == null)
+            catch (AuthenticationException e)
             {
+                AuthNotSuccess = true;
+                Debug.WriteLine(e);
                 return;
             }
-
+            
                 //Realm.Write(() =>
                 //{
                 //    Realm.Add(user,true);
